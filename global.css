@@ -1,0 +1,114 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+/* ==========================================================================
+   lingua design system — design tokens
+   ==========================================================================
+   Source of truth: the 01-design-system design sheet.
+   TS mirror of these tokens lives in `src/theme/` — keep both in sync.
+   Tokens defined here become Tailwind utilities automatically:
+   `bg-primary`, `text-ink`, `font-poppins-bold`, `rounded-card`, …
+   ========================================================================== */
+
+@theme {
+  /* ---- Default font: Poppins (loaded in _layout.tsx) ---- */
+  --font-sans: Poppins;
+
+  /* ---- Poppins weight families ---- */
+  --font-poppins: Poppins;
+  --font-poppins-medium: Poppins-Medium;
+  --font-poppins-semibold: Poppins-SemiBold;
+  --font-poppins-bold: Poppins-Bold;
+
+  /* ---- Brand / Primary colors ---- */
+  --color-primary: #6c4ef5; /* Lingua Purple */
+  --color-primary-deep: #5b3bf6; /* Lingua Deep Purple */
+  --color-primary-blue: #4d8bff; /* Lingua Blue */
+  --color-primary-green: #21c16b; /* Lingua Green */
+
+  /* ---- Semantic colors ---- */
+  --color-success: #21c16b;
+  --color-warning: #ffc800;
+  --color-streak: #ff8a00;
+  --color-error: #ff4d4f;
+  --color-info: #4d8bff;
+
+  /* ---- Neutral colors ---- */
+  --color-ink: #0d132b; /* Text / primary */
+  --color-muted: #6b7280; /* Text / secondary */
+  --color-border: #e5e7eb;
+  --color-surface: #f6f7fb;
+  --color-background: #ffffff;
+
+  /* ---- Border radius ---- */
+  --radius-card: 16px;
+  --radius-btn: 14px;
+  --radius-pill: 999px;
+}
+
+/* ==========================================================================
+   Typography utilities (design-system text styles)
+   ==========================================================================
+   One class per style from the TYPOGRAPHY section of the design sheet.
+   Each sets the Poppins weight family + size + line height + weight.
+   Mirrors `theme/typography.ts` — keep both in sync.
+   ========================================================================== */
+
+@utility text-h1 {
+  font-family: Poppins-Bold;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+@utility text-h2 {
+  font-family: Poppins-SemiBold;
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+@utility text-h3 {
+  font-family: Poppins-SemiBold;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+@utility text-h4 {
+  font-family: Poppins-Medium;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+@utility text-body-lg {
+  font-family: Poppins;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@utility text-body {
+  font-family: Poppins;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@utility text-body-sm {
+  font-family: Poppins;
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@utility text-caption {
+  font-family: Poppins;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 400;
+}
