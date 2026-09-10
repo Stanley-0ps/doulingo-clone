@@ -5,61 +5,44 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "@/constants/images";
 
 /**
- * Exact colors sampled from the `02-onboarding-screen` design.
- * Sized in dp for a typical phone (design is 546×1388, scale ≈ 0.714).
- */
-const COLORS = {
-  ink: "#17172B", // near-black headline / greeting text
-  purple: "#5841EC", // accent word + primary button
-  muted: "#6E6E80", // subtitle gray
-  helloBg: "#EAF1FA", // "Hello!" bubble fill
-  holaBg: "#E9EAFB", // "¡Hola!" bubble fill
-  nihaoBg: "#FCEDE8", // "你好!" bubble fill
-  nihaoText: "#EA3C2A", // "你好!" text (red-orange)
-  groundShadow: "rgba(0, 0, 0, 0.08)",
-} as const;
-
-/**
  * A small greeting speech bubble with a pointer tail.
- * Kept local to this screen because it is only used here.
+ * Colors are passed as NativeWind class names (fill + text) so every style
+ * value lives in tailwind syntax rather than inline styles. Kept local to
+ * this screen because it is only used here.
  */
 function SpeechBubble({
   text,
-  backgroundColor,
-  textColor,
   tail,
-  bubbleStyle,
+  bubbleClassName,
+  fillClassName,
+  textClassName,
 }: {
   text: string;
-  backgroundColor: string;
-  textColor: string;
   /** Which edge the pointer tail hangs off of. */
   tail: "top-left" | "top-right" | "left";
-  bubbleStyle?: object;
+  /** Positioning of the whole bubble, e.g. "absolute top-[1%] left-0". */
+  bubbleClassName: string;
+  /** Fill color, shared by the bubble body and its tail, e.g. "bg-[#EAF1FA]". */
+  fillClassName: string;
+  /** Text color, e.g. "text-[#17172B]". */
+  textClassName: string;
 }) {
-  const tailByEdge = {
-    "top-left": { bottom: -5, left: 18 },
-    "top-right": { bottom: -5, right: 18 },
-    left: { left: -5, top: 14 },
+  const tailClassName = {
+    "top-left": "-bottom-[5px] left-[18px]",
+    "top-right": "-bottom-[5px] right-[18px]",
+    left: "-left-[5px] top-[14px]",
   }[tail];
 
   return (
-    <View style={bubbleStyle}>
-      <View
-        className="rounded-2xl px-3.5 py-1.5"
-        style={{ backgroundColor }}
-      >
-        <Text
-          className="text-[16px] font-poppins-medium"
-          style={{ color: textColor }}
-        >
+    <View className={bubbleClassName}>
+      <View className={`rounded-2xl px-3.5 py-1.5 ${fillClassName}`}>
+        <Text className={`text-[16px] font-poppins-medium ${textClassName}`}>
           {text}
         </Text>
       </View>
       {/* Pointer tail = a small rotated square of the bubble color. */}
       <View
-        className="absolute h-2.5 w-2.5 rotate-45"
-        style={{ backgroundColor, ...tailByEdge }}
+        className={`absolute h-2.5 w-2.5 rotate-45 ${fillClassName} ${tailClassName}`}
       />
     </View>
   );
@@ -68,9 +51,13 @@ function SpeechBubble({
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
 
-  // Keep the mascot comfortably inside the vertical space between the
-  // copy block and the button on any screen size.
-  const mascotSize = Math.min(width * 0.88, height * 0.42, 360);
+  // The mascot is the hero of the onboarding screen. In the reference design
+  // it is the largest element on screen, so size it primarily from screen
+  // width and clamp it against height so it always fits between the copy block
+  // and the button. Note the square canvas only fills ~61% of its own width
+  // with the actual fox, so the container must be generous for the fox to
+  // appear large (the extra margin is transparent).
+  const mascotSize = Math.min(width * 0.88, height * 0.48);
 
   const onGetStarted = () => {
     // Placeholder for feature 04: this will navigate to the sign-up screen.
@@ -83,7 +70,7 @@ export default function OnboardingScreen() {
         <View className="flex-row items-center justify-center gap-2.5 px-10 pt-2">
           <Image
             source={images.mascotLogo}
-            style={{ width: 56, height: 56 }}
+            className="h-14 w-14"
             contentFit="contain"
           />
           <Text className="text-[30px] font-poppins-bold tracking-tight text-[#17172B]">
@@ -108,38 +95,44 @@ export default function OnboardingScreen() {
 
         {/* Illustration: waving fox mascot + floating greetings */}
         <View className="flex-1 items-center justify-center px-6">
+          {/* Container sized at runtime (mascotSize) so it stays an inline style. */}
           <View style={{ width: mascotSize, height: mascotSize }}>
             {/* Soft contact shadow under the mascot's feet */}
-            <View
-              className="absolute bottom-[2%] h-2 w-1/2 rounded-full"
-              style={{ backgroundColor: COLORS.groundShadow }}
-            />
+            <View className="absolute bottom-[6%] h-2 w-1/2 rounded-full bg-[rgba(0,0,0,0.08)]" />
+            {/* The mascot size is derived from the screen dimensions and the
+                fox sits ~3.9% below its square canvas center, so both the size
+                and the centering nudge stay as inline styles (AGENTS.md). */}
             <Image
               source={images.mascotWelcome}
-              className="h-full w-full"
+              style={{
+                width: mascotSize,
+                height: mascotSize,
+                transform: [{ translateY: -mascotSize * 0.039 }],
+              }}
               contentFit="contain"
             />
 
+            {/* Greeting bubbles — colors sampled from the `02-onboarding-screen` design. */}
             <SpeechBubble
               text="Hello!"
-              backgroundColor={COLORS.helloBg}
-              textColor={COLORS.ink}
               tail="top-left"
-              bubbleStyle={{ position: "absolute", top: "1%", left: 0 }}
+              bubbleClassName="absolute top-[1%] left-0"
+              fillClassName="bg-[#EAF1FA]"
+              textClassName="text-[#17172B]"
             />
             <SpeechBubble
               text="¡Hola!"
-              backgroundColor={COLORS.holaBg}
-              textColor={COLORS.purple}
               tail="top-right"
-              bubbleStyle={{ position: "absolute", top: "6%", right: 0 }}
+              bubbleClassName="absolute top-[6%] right-0"
+              fillClassName="bg-[#E9EAFB]"
+              textClassName="text-[#5841EC]"
             />
             <SpeechBubble
               text="你好!"
-              backgroundColor={COLORS.nihaoBg}
-              textColor={COLORS.nihaoText}
               tail="left"
-              bubbleStyle={{ position: "absolute", top: "52%", right: 2 }}
+              bubbleClassName="absolute top-[52%] right-[2px]"
+              fillClassName="bg-[#FCEDE8]"
+              textClassName="text-[#EA3C2A]"
             />
           </View>
         </View>
