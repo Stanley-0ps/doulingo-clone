@@ -23,5 +23,7 @@ export default function RootLayout() {
     return null;
   }
 
-  return <Stack />;
+  // Every screen draws its own header (back button + title), so the navigator
+  // header stays off app-wide.
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

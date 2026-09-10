@@ -1,6 +1,7 @@
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 
@@ -50,17 +51,37 @@ function SpeechBubble({
 
 export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
+  // Reserve the fixed vertical regions that already exist in the screen's
+  // layout: the header lockup, headline/subheadline copy, the bottom CTA,
+  // and the top/bottom safe-area insets. That leaves the mascot a height
+  // budget derived from the remaining screen area so the CTA remains visible
+  // on short screens without forcing a scroll.
+  const reservedHeight =
+    insets.top +
+    insets.bottom +
+    56 +
+    76 +
+    80 +
+    74 +
+    28;
+  const availableMascotHeight = height - insets.top - insets.bottom - reservedHeight;
 
   // The mascot is the hero of the onboarding screen. In the reference design
   // it is the largest element on screen, so size it primarily from screen
-  // width and clamp it against height so it always fits between the copy block
-  // and the button. Note the square canvas only fills ~61% of its own width
-  // with the actual fox, so the container must be generous for the fox to
-  // appear large (the extra margin is transparent).
-  const mascotSize = Math.min(width * 0.88, height * 0.48);
+  // width and clamp it against the remaining vertical budget so it always
+  // fits between the copy block and the button. Note the square canvas only
+  // fills ~61% of its own width with the actual fox, so the container must
+  // be generous for the fox to appear large (the extra margin is transparent).
+  const mascotSize = Math.min(
+    width * 0.88,
+    Math.max(availableMascotHeight, 120),
+  );
 
   const onGetStarted = () => {
-    // Placeholder for feature 04: this will navigate to the sign-up screen.
+    router.push("/sign-up");
   };
 
   return (
@@ -68,9 +89,11 @@ export default function OnboardingScreen() {
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header lockup: mascot-logo mark + app name */}
         <View className="flex-row items-center justify-center gap-2.5 px-10 pt-2">
+          {/* Sized with `style`: NativeWind's className polyfill only covers
+              `react-native` imports, not expo-image. */}
           <Image
             source={images.mascotLogo}
-            className="h-14 w-14"
+            style={{ width: 56, height: 56 }}
             contentFit="contain"
           />
           <Text className="text-[30px] font-poppins-bold tracking-tight text-[#17172B]">
