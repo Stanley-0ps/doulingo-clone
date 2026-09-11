@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/expo";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -7,10 +7,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
  * Home screen — only reachable once signed in.
  *
  * Temporary home UI. Later features replace this with the real (authenticated)
- * home — for now it introduces the app and signs the user back out.
+ * home — for now it links to language selection and signs the user back out.
  */
 export default function Index() {
   const { isLoaded, isSignedIn, signOut } = useAuth();
+  const router = useRouter();
 
   // Clerk restores the session from the keychain asynchronously, so wait for
   // `isLoaded` before deciding — otherwise every cold start flashes the
@@ -35,7 +36,20 @@ export default function Index() {
             Your AI language teacher.
           </Text>
 
-          <View className="mt-10 w-full">
+          <View className="mt-10 w-full gap-3">
+            {/* Language selection — the screen the learner picks their course
+                on. It is a normal route for now; the store that forces this
+                step after sign-up lands next. */}
+            <Pressable
+              onPress={() => router.push("/languages")}
+              accessibilityRole="button"
+              className="w-full items-center rounded-btn border border-border py-4 active:opacity-85"
+            >
+              <Text className="text-body-lg font-poppins-semibold text-ink">
+                Choose a language
+              </Text>
+            </Pressable>
+
             {/* Dropping the session flips `isSignedIn`, and the guard above
                 sends us back to onboarding — no manual navigation needed. */}
             <Pressable

@@ -9,6 +9,7 @@
  */
 
 import apple from "@/assets/images/apple.png";
+import earth from "@/assets/images/earth.png";
 import eyeOff from "@/assets/images/eye-off.png";
 import eye from "@/assets/images/eye.png";
 import facebook from "@/assets/images/facebook.png";
@@ -25,6 +26,12 @@ export const images = {
   mascotWelcome,
   /** Peeking fox mascot used as the auth screens hero illustration. */
   mascotAuth,
+  /**
+   * Landmarks standing on a globe, used as the language selection screen's
+   * bottom illustration. Transparent bands are baked into the asset — see
+   * `EARTH_BAND` in `app/languages.tsx` before sizing it.
+   */
+  earth,
   /** Brand marks for the social auth buttons. */
   google,
   facebook,
