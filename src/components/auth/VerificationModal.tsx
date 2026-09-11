@@ -27,6 +27,8 @@ type VerificationModalProps = {
   onVerifyCode?: (code: string) => Promise<boolean> | boolean;
   /** Requests a replacement verification code when supported by the caller. */
   onResend?: () => void;
+  /** Shown under the boxes when the last code was rejected. */
+  errorMessage?: string | null;
 };
 
 /**
@@ -46,6 +48,7 @@ export default function VerificationModal({
   onVerified,
   onVerifyCode,
   onResend,
+  errorMessage,
 }: VerificationModalProps) {
   const insets = useSafeAreaInsets();
   const [code, setCode] = useState("");
@@ -72,6 +75,8 @@ export default function VerificationModal({
     if (digits.length === CODE_LENGTH) {
       const isVerified = await onVerifyCode?.(digits);
       if (isVerified === false) {
+        // Rejected — clear the boxes so the next attempt starts from scratch.
+        setCode("");
         return;
       }
 
@@ -98,7 +103,7 @@ export default function VerificationModal({
             accessibilityRole="button"
             accessibilityLabel="Close verification"
             onPress={onClose}
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-[rgba(0,0,0,0.4)]"
           />
 
           <View
@@ -159,6 +164,12 @@ export default function VerificationModal({
                 }}
               />
             </View>
+
+            {errorMessage ? (
+              <Text className="mt-4 text-center font-poppins text-[13px] leading-[1.5] text-[#FF4D4F]">
+                {errorMessage}
+              </Text>
+            ) : null}
 
             <Text className="mt-6 text-center font-poppins text-[13px] text-[#6E6E80]">
               Didn&apos;t get the code?{" "}

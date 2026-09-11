@@ -1,13 +1,28 @@
-import { Link } from "expo-router";
+import { useAuth } from "@clerk/expo";
+import { Redirect } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 /**
- * Temporary home screen.
- * Later features replace this with the real (authenticated) home UI — for now
- * it introduces the app and links into the onboarding flow.
+ * Home screen — only reachable once signed in.
+ *
+ * Temporary home UI. Later features replace this with the real (authenticated)
+ * home — for now it introduces the app and signs the user back out.
  */
 export default function Index() {
+  const { isLoaded, isSignedIn, signOut } = useAuth();
+
+  // Clerk restores the session from the keychain asynchronously, so wait for
+  // `isLoaded` before deciding — otherwise every cold start flashes the
+  // signed-out branch.
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <View className="flex-1 bg-white">
       <SafeAreaView style={{ flex: 1 }}>
@@ -21,13 +36,17 @@ export default function Index() {
           </Text>
 
           <View className="mt-10 w-full">
-            <Link href="/onboarding" asChild>
-              <Pressable className="w-full items-center rounded-btn bg-[#5841EC] py-4 active:opacity-85">
-                <Text className="text-body-lg font-poppins-bold uppercase text-white">
-                  Open onboarding
-                </Text>
-              </Pressable>
-            </Link>
+            {/* Dropping the session flips `isSignedIn`, and the guard above
+                sends us back to onboarding — no manual navigation needed. */}
+            <Pressable
+              onPress={() => void signOut()}
+              accessibilityRole="button"
+              className="w-full items-center rounded-btn bg-[#5841EC] py-4 active:opacity-85"
+            >
+              <Text className="text-body-lg font-poppins-bold uppercase text-white">
+                Sign Out
+              </Text>
+            </Pressable>
           </View>
         </View>
       </SafeAreaView>

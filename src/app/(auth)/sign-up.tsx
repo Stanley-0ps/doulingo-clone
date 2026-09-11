@@ -10,7 +10,7 @@ export default function SignUpScreen() {
       title="Create your account"
       subtitle="Start your language journey today ✨"
       submitLabel="Sign Up"
-      showPasswordField
+      mode="sign-up"
       footerQuestion="Already have an account?"
       footerLinkLabel="Log in"
       footerHref="/sign-in"

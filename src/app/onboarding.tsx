@@ -1,5 +1,6 @@
+import { useAuth } from "@clerk/expo";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -50,6 +51,7 @@ function SpeechBubble({
 }
 
 export default function OnboardingScreen() {
+  const { isLoaded, isSignedIn } = useAuth();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -79,6 +81,16 @@ export default function OnboardingScreen() {
     width * 0.88,
     Math.max(availableMascotHeight, 120),
   );
+
+  // Onboarding is the signed-out entry point, so anyone with a live session
+  // belongs on the home route instead.
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/" />;
+  }
 
   const onGetStarted = () => {
     router.push("/sign-up");

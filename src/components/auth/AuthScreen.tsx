@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useSignIn, useSignUp, useSSO } from "@clerk/expo";
+import type { OAuthStrategy, SetActiveNavigate } from "@clerk/expo/types";
 import { Image } from "expo-image";
 import { Link, useRouter, type Href } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -28,13 +30,33 @@ const SPARKLES = [
   { left: 80.5, top: 81.95, width: 13.3, height: 15.4, color: "#F7D648" },
 ] as const;
 
+/** Which Clerk flow this screen drives. */
+type AuthMode = "sign-up" | "sign-in";
+
+/** The social providers the design offers. */
+type SocialProvider = "google" | "facebook" | "apple";
+
+/** Each button maps to the Clerk strategy that starts its OAuth flow. */
+const SSO_STRATEGY = {
+  google: "oauth_google",
+  facebook: "oauth_facebook",
+  apple: "oauth_apple",
+} as const satisfies Record<SocialProvider, OAuthStrategy>;
+
+/** Provider names as they read in user-facing copy. */
+const PROVIDER_LABEL = {
+  google: "Google",
+  facebook: "Facebook",
+  apple: "Apple",
+} as const satisfies Record<SocialProvider, string>;
+
 type AuthScreenProps = {
   title: string;
   /** Supporting line under the title, e.g. "Start your language journey today ✨". */
   subtitle: string;
   submitLabel: string;
-  /** Sign Up collects a password; Sign In is email + social only. */
-  showPasswordField: boolean;
+  /** Sign Up collects a password; Sign In is email-code only. */
+  mode: AuthMode;
   footerQuestion: string;
   footerLinkLabel: string;
   footerHref: Href;
@@ -51,15 +73,27 @@ export default function AuthScreen({
   title,
   subtitle,
   submitLabel,
-  showPasswordField,
+  mode,
   footerQuestion,
   footerLinkLabel,
   footerHref,
 }: AuthScreenProps) {
   const router = useRouter();
+  const { signIn, fetchStatus: signInStatus } = useSignIn();
+  const { signUp, fetchStatus: signUpStatus } = useSignUp();
+  const { startSSOFlow } = useSSO();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  /** Rendered on the form, directly above the submit button. */
+  const [formError, setFormError] = useState<string | null>(null);
+  /** Rendered inside the code sheet, under the six boxes. */
+  const [codeError, setCodeError] = useState<string | null>(null);
+
+  const isSignUp = mode === "sign-up";
+  const showPasswordField = isSignUp;
+  const isSubmitting = (isSignUp ? signUpStatus : signInStatus) === "fetching";
 
   const goBack = () => {
     if (router.canGoBack()) {
@@ -67,6 +101,145 @@ export default function AuthScreen({
       return;
     }
     router.replace("/onboarding");
+  };
+
+  /**
+   * Clerk's errors carry a developer-facing `message` and an optional
+   * user-facing `longMessage`; prefer the readable one when Clerk supplies it.
+   */
+  const readable = (error: { message: string; longMessage?: string }) =>
+    error.longMessage ?? error.message;
+
+  /**
+   * Shared ending for both flows. `finalize` hands back the new session and a
+   * `decorateUrl` helper (which rewrites the URL when Safari ITP cookies need
+   * refreshing), so route through that rather than hard-coding the path.
+   */
+  const navigateAfterAuth: SetActiveNavigate = ({ session, decorateUrl }) => {
+    // A session task (forced MFA enrolment, organization selection, …) has to be
+    // resolved before the user can reach the app. Nothing on this instance sets
+    // one, so stay put rather than routing into a half-signed-in state.
+    if (session?.currentTask) {
+      return;
+    }
+    router.replace(decorateUrl("/") as Href);
+  };
+
+  /** Step 1 of both flows: start the attempt and email the user a code. */
+  const onSubmit = async () => {
+    setFormError(null);
+    const emailAddress = email.trim();
+
+    if (isSignUp) {
+      const { error } = await signUp.password({ emailAddress, password });
+      if (error) {
+        setFormError(readable(error));
+        return;
+      }
+
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
+      if (sendError) {
+        setFormError(readable(sendError));
+        return;
+      }
+    } else {
+      // Sign In is email-code only: the design has no password field, and this
+      // instance does not allow password as a first factor. `sendCode` creates
+      // the sign-in attempt and sends the email in one call.
+      const { error } = await signIn.emailCode.sendCode({ emailAddress });
+      if (error) {
+        setFormError(
+          error.code === "form_identifier_not_found"
+            ? "No account found for that email. Sign up instead."
+            : readable(error),
+        );
+        return;
+      }
+    }
+
+    setCodeError(null);
+    setIsVerifying(true);
+  };
+
+  /** Step 2: the sheet hands us all six digits, and we finish the flow. */
+  const onVerifyCode = async (code: string) => {
+    if (isSignUp) {
+      const { error } = await signUp.verifications.verifyEmailCode({ code });
+      if (error) {
+        setCodeError(readable(error));
+        return false;
+      }
+
+      const { error: finalizeError } = await signUp.finalize({
+        navigate: navigateAfterAuth,
+      });
+      if (finalizeError) {
+        setCodeError(readable(finalizeError));
+        return false;
+      }
+    } else {
+      const { error } = await signIn.emailCode.verifyCode({ code });
+      if (error) {
+        setCodeError(readable(error));
+        return false;
+      }
+
+      const { error: finalizeError } = await signIn.finalize({
+        navigate: navigateAfterAuth,
+      });
+      if (finalizeError) {
+        setCodeError(readable(finalizeError));
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const onResendCode = () => {
+    setCodeError(null);
+    // Passing no arguments reuses the attempt already in flight.
+    if (isSignUp) {
+      void signUp.verifications.sendEmailCode();
+    } else {
+      void signIn.emailCode.sendCode();
+    }
+  };
+
+  const onCloseVerification = () => {
+    setIsVerifying(false);
+    setCodeError(null);
+    // Drop the half-finished attempt so tapping submit again starts clean
+    // instead of resuming one Clerk may no longer accept.
+    if (isSignUp) {
+      void signUp.reset();
+    } else {
+      void signIn.reset();
+    }
+  };
+
+  const onSocialPress = async (provider: SocialProvider) => {
+    setFormError(null);
+
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: SSO_STRATEGY[provider],
+      });
+
+      // No session id means the user dismissed the browser sheet — not an error.
+      if (createdSessionId && setActive) {
+        // SSO is the one flow that still activates the session itself rather
+        // than going through `finalize()`.
+        await setActive({ session: createdSessionId });
+        router.replace("/");
+      }
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? readable(error)
+          : `Could not start ${PROVIDER_LABEL[provider]} sign-in. Please try again.`,
+      );
+    }
   };
 
   return (
@@ -159,15 +332,29 @@ export default function AuthScreen({
               </View>
             ) : null}
 
+            {formError ? (
+              <Text className="mt-[14px] font-poppins text-[13px] leading-[1.5] text-[#FF4D4F]">
+                {formError}
+              </Text>
+            ) : null}
+
             <Pressable
-              onPress={() => setIsVerifying(true)}
+              onPress={onSubmit}
+              disabled={isSubmitting}
               accessibilityRole="button"
-              className="mt-[15px] h-[58px] items-center justify-center rounded-[12px] bg-[#5841EC] active:opacity-90"
+              className={`mt-[15px] h-[58px] items-center justify-center rounded-[12px] bg-[#5841EC] ${
+                isSubmitting ? "opacity-60" : "active:opacity-90"
+              }`}
             >
               <Text className="text-[17px] font-poppins-bold text-white">
                 {submitLabel}
               </Text>
             </Pressable>
+
+            {/* Clerk's bot protection is on by default and needs this mount
+                point in every screen that can create an account. It renders
+                nothing on iOS and Android — only Expo web shows a challenge. */}
+            {isSignUp ? <View nativeID="clerk-captcha" /> : null}
 
             <View className="mt-[22.5px] flex-row items-center">
               <View className="h-px flex-1 bg-[#E8E9EE]" />
@@ -181,17 +368,17 @@ export default function AuthScreen({
               <SocialAuthButton
                 provider="google"
                 label="Continue with Google"
-                onPress={() => {}}
+                onPress={() => void onSocialPress("google")}
               />
               <SocialAuthButton
                 provider="facebook"
                 label="Continue with Facebook"
-                onPress={() => {}}
+                onPress={() => void onSocialPress("facebook")}
               />
               <SocialAuthButton
                 provider="apple"
                 label="Continue with Apple"
-                onPress={() => {}}
+                onPress={() => void onSocialPress("apple")}
               />
             </View>
           </View>
@@ -213,11 +400,13 @@ export default function AuthScreen({
       {isVerifying ? (
         <VerificationModal
           email={email.trim() || "your email address"}
-          onClose={() => setIsVerifying(false)}
-          onVerified={() => {
-            setIsVerifying(false);
-            router.replace("/");
-          }}
+          errorMessage={codeError}
+          onClose={onCloseVerification}
+          onVerifyCode={onVerifyCode}
+          onResend={onResendCode}
+          // `finalize` already routed on success — this only puts the sheet away
+          // in the case where a session task kept us on the auth screen.
+          onVerified={() => setIsVerifying(false)}
         />
       ) : null}
     </View>

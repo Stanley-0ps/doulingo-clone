@@ -10,7 +10,7 @@ export default function SignInScreen() {
       title="Welcome back"
       subtitle="Pick up right where you left off ✨"
       submitLabel="Sign In"
-      showPasswordField={false}
+      mode="sign-in"
       footerQuestion="Don't have an account?"
       footerLinkLabel="Sign up"
       footerHref="/sign-up"
