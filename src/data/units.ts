@@ -6,9 +6,9 @@
  * listed under two units. Use `getLessonsForUnit()` in `data/lessons.ts` to
  * read the other direction.
  *
- * Sample content ships for Spanish, French, and Japanese. Korean, German, and
- * Chinese are selectable on the language screen but have no units yet, which
- * is why `getUnitsForLanguage()` may return an empty array.
+ * Sample content ships for Spanish, French, and Japanese. German is selectable
+ * on the language screen but has no units yet, which is why
+ * `getUnitsForLanguage()` may return an empty array.
  */
 
 import type { LanguageId, Unit, UnitId } from "@/types/learning";

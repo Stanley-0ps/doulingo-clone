@@ -39,15 +39,6 @@ export const languages: Language[] = [
     teacherVoice: "coral",
   },
   {
-    id: "korean",
-    name: "Korean",
-    nativeName: "한국어",
-    flag: "https://flagcdn.com/w320/kr.png",
-    speechCode: "ko-KR",
-    learners: "9.3M learners",
-    teacherVoice: "alloy",
-  },
-  {
     id: "german",
     name: "German",
     nativeName: "Deutsch",
@@ -55,15 +46,6 @@ export const languages: Language[] = [
     speechCode: "de-DE",
     learners: "8.1M learners",
     teacherVoice: "shimmer",
-  },
-  {
-    id: "chinese",
-    name: "Chinese",
-    nativeName: "中文",
-    flag: "https://flagcdn.com/w320/cn.png",
-    speechCode: "zh-CN",
-    learners: "7.4M learners",
-    teacherVoice: "coral",
   },
 ];
 

@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import LanguageRow from "@/components/language/LanguageRow";
 import { images } from "@/constants/images";
 import { defaultLanguageId, languages } from "@/data/languages";
+import { useLanguageStore } from "@/store/languageStore";
 import { colors } from "@/theme";
 import type { LanguageId } from "@/types/learning";
 
@@ -50,15 +51,26 @@ const EARTH_CONTENT = 827 / 1254; // visible height of the artwork
  * Language selection screen.
  *
  * The learner picks one of the hardcoded languages from `data/languages.ts`,
- * then confirms to carry on into the app. Selection is local state for now —
- * the store that persists it and gates the home route lands next.
+ * then confirms to carry on into the app. Confirming writes the choice to the
+ * language store, which the home route reads to decide whether the learner is
+ * allowed in yet.
  */
 export default function LanguagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
 
-  const [selectedId, setSelectedId] = useState<LanguageId>(defaultLanguageId);
+  const storedLanguageId = useLanguageStore(
+    (state) => state.selectedLanguageId,
+  );
+  const selectLanguage = useLanguageStore((state) => state.selectLanguage);
+
+  // Local state so a tap highlights a row before the learner commits. It starts
+  // from the language already on file — switching courses re-opens the screen on
+  // the current one rather than resetting to Spanish.
+  const [selectedId, setSelectedId] = useState<LanguageId>(
+    storedLanguageId ?? defaultLanguageId,
+  );
   const [query, setQuery] = useState("");
 
   const search = query.trim().toLowerCase();
@@ -74,6 +86,12 @@ export default function LanguagesScreen() {
     languages.find((language) => language.id === selectedId) ?? languages[0];
 
   const goBack = () => {
+    // First run: there is no course yet, so home would only redirect straight
+    // back here. Leaving the learner on this screen is the honest behaviour.
+    if (!storedLanguageId) {
+      return;
+    }
+
     if (router.canGoBack()) {
       router.back();
       return;
@@ -170,7 +188,10 @@ export default function LanguagesScreen() {
             )}
 
             <Pressable
-              onPress={() => router.replace("/")}
+              onPress={() => {
+                selectLanguage(selectedId);
+                router.replace("/");
+              }}
               accessibilityRole="button"
               className="flex-row items-center rounded-card bg-primary px-[16px] active:opacity-90"
               style={{ marginTop: BUTTON_GAP, height: BUTTON_HEIGHT }}
