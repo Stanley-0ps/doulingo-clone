@@ -65,13 +65,19 @@ export default function LanguagesScreen() {
   );
   const selectLanguage = useLanguageStore((state) => state.selectLanguage);
 
-  // Local state so a tap highlights a row before the learner commits. It starts
-  // from the language already on file — switching courses re-opens the screen on
-  // the current one rather than resetting to Spanish.
-  const [selectedId, setSelectedId] = useState<LanguageId>(
-    storedLanguageId ?? defaultLanguageId,
-  );
+  // A tap highlights a row before the learner commits. It is held as `null`
+  // until then rather than seeded from the store, because the store's value
+  // arrives from AsyncStorage *after* the first render: a `useState` initializer
+  // runs once, so it would capture the empty value and never see the real one.
+  // Holding the tap separately also means a tap made before the store hydrates
+  // wins rather than being overwritten when it does.
+  const [pickedId, setPickedId] = useState<LanguageId | null>(null);
   const [query, setQuery] = useState("");
+
+  // With nothing tapped, the language already on file is the selection —
+  // switching courses re-opens the screen on the current one rather than
+  // resetting to Spanish.
+  const selectedId = pickedId ?? storedLanguageId ?? defaultLanguageId;
 
   const search = query.trim().toLowerCase();
   const visibleLanguages = search
@@ -177,7 +183,7 @@ export default function LanguagesScreen() {
                     key={language.id}
                     language={language}
                     selected={language.id === selectedId}
-                    onPress={() => setSelectedId(language.id)}
+                    onPress={() => setPickedId(language.id)}
                   />
                 ))}
               </View>

@@ -51,6 +51,8 @@ export interface Language {
   name: string;
   /** Name in the language itself, e.g. "Español". */
   nativeName: string;
+  /** Hello in the language itself, e.g. "Hola" — greets the learner on home. */
+  greeting: string;
   /** Flag image URL used as the list icon on the language selection screen. */
   flag: string;
   /**
