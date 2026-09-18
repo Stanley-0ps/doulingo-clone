@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import LanguageRow from "@/components/language/LanguageRow";
 import { images } from "@/constants/images";
 import { defaultLanguageId, languages } from "@/data/languages";
+import { useLanguageStore } from "@/store/languageStore";
 import { colors } from "@/theme";
 import type { LanguageId } from "@/types/learning";
 
@@ -50,16 +51,33 @@ const EARTH_CONTENT = 827 / 1254; // visible height of the artwork
  * Language selection screen.
  *
  * The learner picks one of the hardcoded languages from `data/languages.ts`,
- * then confirms to carry on into the app. Selection is local state for now —
- * the store that persists it and gates the home route lands next.
+ * then confirms to carry on into the app. Confirming writes the choice to the
+ * language store, which the home route reads to decide whether the learner is
+ * allowed in yet.
  */
 export default function LanguagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
 
-  const [selectedId, setSelectedId] = useState<LanguageId>(defaultLanguageId);
+  const storedLanguageId = useLanguageStore(
+    (state) => state.selectedLanguageId,
+  );
+  const selectLanguage = useLanguageStore((state) => state.selectLanguage);
+
+  // A tap highlights a row before the learner commits. It is held as `null`
+  // until then rather than seeded from the store, because the store's value
+  // arrives from AsyncStorage *after* the first render: a `useState` initializer
+  // runs once, so it would capture the empty value and never see the real one.
+  // Holding the tap separately also means a tap made before the store hydrates
+  // wins rather than being overwritten when it does.
+  const [pickedId, setPickedId] = useState<LanguageId | null>(null);
   const [query, setQuery] = useState("");
+
+  // With nothing tapped, the language already on file is the selection —
+  // switching courses re-opens the screen on the current one rather than
+  // resetting to Spanish.
+  const selectedId = pickedId ?? storedLanguageId ?? defaultLanguageId;
 
   const search = query.trim().toLowerCase();
   const visibleLanguages = search
@@ -74,6 +92,12 @@ export default function LanguagesScreen() {
     languages.find((language) => language.id === selectedId) ?? languages[0];
 
   const goBack = () => {
+    // First run: there is no course yet, so home would only redirect straight
+    // back here. Leaving the learner on this screen is the honest behaviour.
+    if (!storedLanguageId) {
+      return;
+    }
+
     if (router.canGoBack()) {
       router.back();
       return;
@@ -159,7 +183,7 @@ export default function LanguagesScreen() {
                     key={language.id}
                     language={language}
                     selected={language.id === selectedId}
-                    onPress={() => setSelectedId(language.id)}
+                    onPress={() => setPickedId(language.id)}
                   />
                 ))}
               </View>
@@ -170,7 +194,10 @@ export default function LanguagesScreen() {
             )}
 
             <Pressable
-              onPress={() => router.replace("/")}
+              onPress={() => {
+                selectLanguage(selectedId);
+                router.replace("/");
+              }}
               accessibilityRole="button"
               className="flex-row items-center rounded-card bg-primary px-[16px] active:opacity-90"
               style={{ marginTop: BUTTON_GAP, height: BUTTON_HEIGHT }}

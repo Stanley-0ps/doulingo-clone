@@ -20,3 +20,11 @@ declare module "*.ttf" {
   const src: number;
   export default src;
 }
+
+/**
+ * NativeWind's Metro transformer compiles `global.css` at build time and
+ * injects the result into the bundle, so the file is imported purely for its
+ * side effects and exposes no runtime exports. Neither `nativewind/types` nor
+ * `react-native-css/types` declares the `*.css` module, so it is declared here.
+ */
+declare module "*.css";
