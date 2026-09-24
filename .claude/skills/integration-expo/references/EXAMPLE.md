@@ -109,7 +109,7 @@ npx expo run:android
 
 ### Configuration
 
-PostHog is configured in `src/config/posthog.ts` using environment variables from `app.json`:
+PostHog is configured in `src/config/posthog.ts` using extras from `app.config.js`:
 
 ```typescript
 import Constants from 'expo-constants'
@@ -995,7 +995,7 @@ module.exports = function (api) {
 import PostHog from 'posthog-react-native'
 import Constants from 'expo-constants'
 
-// Configuration loaded from app.config.js extras via expo-constants
+// Configuration loaded from app.config.js extras via expo-constants.
 // Environment variables are read at build time in app.config.js
 const projectToken = Constants.expoConfig?.extra?.posthogProjectToken as string | undefined
 const host = (Constants.expoConfig?.extra?.posthogHost as string) || 'https://us.i.posthog.com'
@@ -1010,10 +1010,15 @@ if (__DEV__) {
 }
 
 if (!isPostHogConfigured) {
-  console.warn(
+  const message =
     'PostHog project token not configured. Analytics will be disabled. ' +
-      'Set POSTHOG_PROJECT_TOKEN in your .env file to enable analytics.'
-  )
+    'Set POSTHOG_PROJECT_TOKEN in your .env file to enable analytics.'
+
+  if (__DEV__ || process.env.NODE_ENV === 'development') {
+    throw new Error(message)
+  }
+
+  console.warn(message)
 }
 
 /**
@@ -1135,7 +1140,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await storage.setCurrentUser(username)
       setUser(userData)
 
-      posthog.identify(username, {
+      // Demo-only identity: keep the username property, but avoid reusing it
+      // as the distinct ID across separate installations.
+      const demoDistinctId = `demo-${Date.now()}-${Math.random().toString(36).slice(2)}-${username}`
+      posthog.identify(demoDistinctId, {
         $set: { username },
         $set_once: { first_login_date: new Date().toISOString() },
       })

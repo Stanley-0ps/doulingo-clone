@@ -7,13 +7,25 @@ import {
   usePathname,
 } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import {
+  PostHogProvider,
+  usePostHog,
+  type PostHog,
+} from "posthog-react-native";
 import { useEffect, useRef } from "react";
-import { PostHogProvider, usePostHog } from "posthog-react-native";
 
 import "../../global.css";
 
 import { posthogConfig } from "@/config/posthog";
 import { appFonts } from "@/constants/fonts";
+
+const disabledPostHog = {
+  capture: () => undefined,
+  captureException: () => undefined,
+  identify: () => undefined,
+  screen: () => undefined,
+  logger: { info: () => undefined },
+} as unknown as PostHog;
 
 /**
  * Reads the Clerk publishable key and fails loudly if it is missing.
@@ -107,7 +119,11 @@ export default function RootLayout() {
   // Every screen draws its own header (back button + title), so the navigator
   // header stays off app-wide.
   if (!posthogConfig) {
-    return <AppNavigator withPostHog={false} />;
+    return (
+      <PostHogProvider client={disabledPostHog} autocapture={false}>
+        <AppNavigator withPostHog={false} />
+      </PostHogProvider>
+    );
   }
 
   return (
@@ -120,7 +136,7 @@ export default function RootLayout() {
           environment: __DEV__ ? "development" : "production",
         },
       }}
-      autocapture={{ captureScreens: false, captureTouches: true }}
+      autocapture={{ captureScreens: true, captureTouches: true }}
       debug={__DEV__}
     >
       <PostHogScreenTracker />

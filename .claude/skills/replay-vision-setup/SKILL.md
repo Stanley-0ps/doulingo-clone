@@ -78,7 +78,7 @@ Install each skill, fill the blanks its brief names from the repo, and create wi
 Per-scanner notes:
 
 - **No identifiable completion flow** for scanner 1: don't invent one - fall back to the handful of highest-traffic paths, and record that you couldn't identify a completion flow.
-- **Not a web app**: skip scanner 1; keep scanners 2 and 3 only if the product has any recorded web sessions at all. Skipping all three on a pure backend project is a correct outcome - record why.
+- **Not a web app**: skip scanner 1; keep scanners 2 and 3 whenever the product has any recorded sessions, including mobile sessions. Skipping all three when no sessions exist is a correct outcome - record why.
 - Any failure on one scanner: handle it as `replay-vision-scanners-core` says, record the follow-up, and continue with the next. One failure never stops the step.
 
 ### STEP 5: Report and hand off

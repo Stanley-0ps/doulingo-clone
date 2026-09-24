@@ -102,7 +102,7 @@ This page covers troubleshooting for Logs. For setup, see the [installation guid
 
 -   Use your self-hosted instance URL instead of `https://us.i.posthog.com`
 -   Verify the logs endpoint is enabled on your self-hosted instance
--   Check that the endpoint path is correct: `/logs`
+-   Check that the endpoint path is correct: `/i/v1/logs`
 -   Ensure your PostHog version supports the logs feature
 
 ## Still having issues?
