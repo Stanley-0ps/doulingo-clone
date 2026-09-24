@@ -13,13 +13,7 @@ import type { ImageName } from "@/constants/images";
 import type { ColorToken } from "@/theme";
 
 /** Ids of the languages the app ships with. */
-export type LanguageId =
-  | "spanish"
-  | "french"
-  | "japanese"
-  | "korean"
-  | "german"
-  | "chinese";
+export type LanguageId = "spanish" | "french" | "japanese" | "german";
 
 /**
  * Ids below are stable slugs (`"es-unit-1"`, `"es-greetings"`, `"es-greetings-v1"`)
@@ -57,6 +51,8 @@ export interface Language {
   name: string;
   /** Name in the language itself, e.g. "Español". */
   nativeName: string;
+  /** Hello in the language itself, e.g. "Hola" — greets the learner on home. */
+  greeting: string;
   /** Flag image URL used as the list icon on the language selection screen. */
   flag: string;
   /**
