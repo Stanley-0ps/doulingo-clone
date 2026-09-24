@@ -1,12 +1,18 @@
-import { ClerkProvider } from "@clerk/expo";
+import { ClerkProvider, useUser } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import {
+  Stack,
+  useGlobalSearchParams,
+  usePathname,
+} from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 
 import "../../global.css";
 
+import { posthogConfig } from "@/config/posthog";
 import { appFonts } from "@/constants/fonts";
 
 /**
@@ -30,6 +36,56 @@ function getPublishableKey(): string {
 
 const publishableKey = getPublishableKey();
 
+function PostHogScreenTracker() {
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const previousPathname = useRef<string | null>(null);
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      posthog.screen(pathname, {
+        previous_screen: previousPathname.current,
+        has_route_params: Object.keys(params).length > 0,
+      });
+      previousPathname.current = pathname;
+    }
+  }, [params, pathname, posthog]);
+
+  return null;
+}
+
+function PostHogIdentity() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const posthog = usePostHog();
+  const identifiedUserId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !user || identifiedUserId.current === user.id) {
+      return;
+    }
+
+    posthog.identify(user.id, {
+      ...(user.primaryEmailAddress?.emailAddress
+        ? { email: user.primaryEmailAddress.emailAddress }
+        : {}),
+      ...(user.fullName ? { name: user.fullName } : {}),
+    });
+    identifiedUserId.current = user.id;
+  }, [isLoaded, isSignedIn, posthog, user]);
+
+  return null;
+}
+
+function AppNavigator({ withPostHog }: { withPostHog: boolean }) {
+  return (
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      {withPostHog ? <PostHogIdentity /> : null}
+      <Stack screenOptions={{ headerShown: false }} />
+    </ClerkProvider>
+  );
+}
+
 // Keep the splash screen visible until the Poppins fonts are ready.
 void SplashScreen.preventAutoHideAsync();
 
@@ -50,9 +106,25 @@ export default function RootLayout() {
   // so a signed-in user is still signed in after the app restarts.
   // Every screen draws its own header (back button + title), so the navigator
   // header stays off app-wide.
+  if (!posthogConfig) {
+    return <AppNavigator withPostHog={false} />;
+  }
+
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </ClerkProvider>
+    <PostHogProvider
+      apiKey={posthogConfig.projectToken}
+      options={{
+        host: posthogConfig.host,
+        logs: {
+          serviceName: "domingo-mobile",
+          environment: __DEV__ ? "development" : "production",
+        },
+      }}
+      autocapture={{ captureScreens: false, captureTouches: true }}
+      debug={__DEV__}
+    >
+      <PostHogScreenTracker />
+      <AppNavigator withPostHog />
+    </PostHogProvider>
   );
 }

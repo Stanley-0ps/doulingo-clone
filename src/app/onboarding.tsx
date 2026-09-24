@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { Image } from "expo-image";
 import { Redirect, useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -55,6 +56,7 @@ export default function OnboardingScreen() {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const posthog = usePostHog();
 
   // Reserve the fixed vertical regions that already exist in the screen's
   // layout: the header lockup, headline/subheadline copy, the bottom CTA,
@@ -93,6 +95,7 @@ export default function OnboardingScreen() {
   }
 
   const onGetStarted = () => {
+    posthog.capture("onboarding_started", { destination: "sign_up" });
     router.push("/sign-up");
   };
 

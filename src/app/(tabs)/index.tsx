@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,6 +45,7 @@ const LIST_GAP = 12; // "Today's plan" → the row stack
 export default function HomeScreen() {
   const { user } = useUser();
   const router = useRouter();
+  const posthog = usePostHog();
 
   const selectedLanguageId = useLanguageStore(
     (state) => state.selectedLanguageId,
@@ -96,7 +98,14 @@ export default function HomeScreen() {
                   languageName={language.name}
                   level={plan.unit.level}
                   unitOrder={plan.unit.order}
-                  onPress={() => router.push("/learn")}
+                  onPress={() => {
+                    posthog.capture("learning_continued", {
+                      language_id: language.id,
+                      level: plan.unit.level,
+                      unit_order: plan.unit.order,
+                    });
+                    router.push("/learn");
+                  }}
                 />
               </View>
 
@@ -108,7 +117,13 @@ export default function HomeScreen() {
                   Today&apos;s plan
                 </Text>
                 <Pressable
-                  onPress={() => router.push("/learn")}
+                  onPress={() => {
+                    posthog.capture("learning_plan_opened", {
+                      language_id: language.id,
+                      plan_step_count: plan.steps.length,
+                    });
+                    router.push("/learn");
+                  }}
                   accessibilityRole="button"
                   className="active:opacity-60"
                 >

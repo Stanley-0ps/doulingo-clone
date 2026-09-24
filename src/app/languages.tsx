@@ -1,6 +1,7 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { usePostHog } from "posthog-react-native";
 import {
   Pressable,
   ScrollView,
@@ -59,6 +60,7 @@ export default function LanguagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const posthog = usePostHog();
 
   const storedLanguageId = useLanguageStore(
     (state) => state.selectedLanguageId,
@@ -195,7 +197,15 @@ export default function LanguagesScreen() {
 
             <Pressable
               onPress={() => {
+                posthog.capture("language_selected", {
+                  language_id: selectedId,
+                  is_course_change: storedLanguageId !== null,
+                });
                 selectLanguage(selectedId);
+                posthog.logger.info("language preference persisted", {
+                  language_id: selectedId,
+                  is_course_change: storedLanguageId !== null,
+                });
                 router.replace("/");
               }}
               accessibilityRole="button"

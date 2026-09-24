@@ -3,6 +3,7 @@ import type { OAuthStrategy, SetActiveNavigate } from "@clerk/expo/types";
 import { Image } from "expo-image";
 import { Link, useRouter, type Href } from "expo-router";
 import { useState } from "react";
+import { usePostHog } from "posthog-react-native";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -82,6 +83,7 @@ export default function AuthScreen({
   const { signIn, fetchStatus: signInStatus } = useSignIn();
   const { signUp, fetchStatus: signUpStatus } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const posthog = usePostHog();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -133,12 +135,20 @@ export default function AuthScreen({
     if (isSignUp) {
       const { error } = await signUp.password({ emailAddress, password });
       if (error) {
+        posthog.captureException(error, {
+          auth_mode: mode,
+          auth_stage: "password_submission",
+        });
         setFormError(readable(error));
         return;
       }
 
       const { error: sendError } = await signUp.verifications.sendEmailCode();
       if (sendError) {
+        posthog.captureException(sendError, {
+          auth_mode: mode,
+          auth_stage: "code_delivery",
+        });
         setFormError(readable(sendError));
         return;
       }
@@ -148,6 +158,10 @@ export default function AuthScreen({
       // the sign-in attempt and sends the email in one call.
       const { error } = await signIn.emailCode.sendCode({ emailAddress });
       if (error) {
+        posthog.captureException(error, {
+          auth_mode: mode,
+          auth_stage: "code_delivery",
+        });
         setFormError(
           error.code === "form_identifier_not_found"
             ? "No account found for that email. Sign up instead."
@@ -157,6 +171,7 @@ export default function AuthScreen({
       }
     }
 
+    posthog.capture("auth_code_sent", { auth_mode: mode });
     setCodeError(null);
     setIsVerifying(true);
   };
@@ -166,6 +181,10 @@ export default function AuthScreen({
     if (isSignUp) {
       const { error } = await signUp.verifications.verifyEmailCode({ code });
       if (error) {
+        posthog.captureException(error, {
+          auth_mode: mode,
+          auth_stage: "code_verification",
+        });
         setCodeError(readable(error));
         return false;
       }
@@ -174,12 +193,20 @@ export default function AuthScreen({
         navigate: navigateAfterAuth,
       });
       if (finalizeError) {
+        posthog.captureException(finalizeError, {
+          auth_mode: mode,
+          auth_stage: "session_finalization",
+        });
         setCodeError(readable(finalizeError));
         return false;
       }
     } else {
       const { error } = await signIn.emailCode.verifyCode({ code });
       if (error) {
+        posthog.captureException(error, {
+          auth_mode: mode,
+          auth_stage: "code_verification",
+        });
         setCodeError(readable(error));
         return false;
       }
@@ -188,15 +215,25 @@ export default function AuthScreen({
         navigate: navigateAfterAuth,
       });
       if (finalizeError) {
+        posthog.captureException(finalizeError, {
+          auth_mode: mode,
+          auth_stage: "session_finalization",
+        });
         setCodeError(readable(finalizeError));
         return false;
       }
     }
 
+    posthog.capture("auth_completed", { auth_mode: mode });
+    posthog.logger.info("authentication flow completed", {
+      auth_mode: mode,
+      auth_method: "email_code",
+    });
     return true;
   };
 
   const onResendCode = () => {
+    posthog.capture("verification_code_resent", { auth_mode: mode });
     setCodeError(null);
     // Passing no arguments reuses the attempt already in flight.
     if (isSignUp) {
@@ -231,9 +268,20 @@ export default function AuthScreen({
         // SSO is the one flow that still activates the session itself rather
         // than going through `finalize()`.
         await setActive({ session: createdSessionId });
+        posthog.capture("social_auth_completed", { provider });
+        posthog.logger.info("authentication flow completed", {
+          auth_mode: mode,
+          auth_method: "social",
+          provider,
+        });
         router.replace("/");
       }
     } catch (error) {
+      posthog.captureException(error, {
+        auth_mode: mode,
+        auth_stage: "social_authentication",
+        provider,
+      });
       setFormError(
         error instanceof Error
           ? readable(error)

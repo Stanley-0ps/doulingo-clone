@@ -47,7 +47,7 @@ const CIRCLE_TOP = ICON_TOP + ICON_SIZE / 2 - CIRCLE_SIZE / 2;
  */
 const INACTIVE_COLOR = "#7C819E";
 
-const SLIDE_DURATION = 220;
+const SLIDE_DURATION = 140;
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -99,8 +99,8 @@ export default function TabBar({
     // one, which reads as a bounce rather than as the selection sliding.
     //
     // Keep this short. Linear motion has no tail to cover a long duration, so
-    // past roughly a quarter second the disc reads as slow to arrive rather
-    // than as gliding — the tab underneath has already changed by then.
+    // the longer it runs the more the disc reads as slow to arrive rather than
+    // as gliding — the tab underneath has already changed by then.
     progress.value = withTiming(state.index, {
       duration: SLIDE_DURATION,
       easing: Easing.linear,
