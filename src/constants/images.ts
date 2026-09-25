@@ -14,6 +14,12 @@ import eyeOff from "@/assets/images/eye-off.png";
 import eye from "@/assets/images/eye.png";
 import facebook from "@/assets/images/facebook.png";
 import google from "@/assets/images/google.png";
+import lessonCafe from "@/assets/images/lesson-cafe.jpg";
+import lessonDailyLife from "@/assets/images/lesson-daily-life.jpg";
+import lessonFamily from "@/assets/images/lesson-family.jpg";
+import lessonGreetings from "@/assets/images/lesson-greetings.jpg";
+import lessonShopping from "@/assets/images/lesson-shopping.jpg";
+import lessonTravel from "@/assets/images/lesson-travel.jpg";
 import mascotAuth from "@/assets/images/mascot-auth.png";
 import mascotLogo from "@/assets/images/moscot-logo.png";
 import mascotWelcome from "@/assets/images/mascot-welcome.png";
@@ -62,6 +68,17 @@ export const images = {
    * `FLAME_*` constants in `components/home/HomeHeader.tsx`.
    */
   streakFire,
+  /**
+   * Lesson illustrations for the six lessons of the first Spanish unit, shown
+   * as the hero banner on the lesson screen. Keyed by the lesson they belong
+   * to — see the `artwork` field of each lesson in `data/lessons.ts`.
+   */
+  lessonGreetings,
+  lessonDailyLife,
+  lessonCafe,
+  lessonTravel,
+  lessonShopping,
+  lessonFamily,
 } as const;
 
 export type ImageName = keyof typeof images;

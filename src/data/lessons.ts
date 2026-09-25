@@ -31,10 +31,11 @@ import type {
 const unitOrder = new Map(units.map((unit) => [unit.id, unit.order]));
 
 /**
- * Real lesson illustrations are not in the repo yet, so most lessons point at a
- * deterministic placeholder (the same seed always returns the same image).
- * Swap a lesson's `artwork` for `{ kind: "asset", name: "..." }` once its
- * illustration lands in `assets/images`.
+ * Lessons whose illustration is not in the repo yet point at a deterministic
+ * placeholder (the same seed always returns the same image). Swap a lesson's
+ * `artwork` for `{ kind: "asset", name: "..." }` once its illustration lands in
+ * `assets/images`. The six lessons of the first Spanish unit already use their
+ * own `lesson-*` images.
  */
 function placeholder(seed: string): LessonArtwork {
   return { kind: "remote", uri: `https://picsum.photos/seed/${seed}/800/450` };
@@ -53,7 +54,7 @@ export const lessons: Lesson[] = [
     description: "Say hello, tell people your name, and be polite.",
     estimatedMinutes: 5,
     xpReward: 10,
-    artwork: { kind: "asset", name: "mascotWelcome" },
+    artwork: { kind: "asset", name: "lessonGreetings" },
     vocabulary: [
       {
         id: "es-greetings-v1",
@@ -213,7 +214,7 @@ export const lessons: Lesson[] = [
     description: "Talk about your day and the things you do.",
     estimatedMinutes: 6,
     xpReward: 10,
-    artwork: placeholder("es-daily-life"),
+    artwork: { kind: "asset", name: "lessonDailyLife" },
     vocabulary: [
       {
         id: "es-daily-life-v1",
@@ -378,7 +379,7 @@ export const lessons: Lesson[] = [
     description: "Order drinks and food politely.",
     estimatedMinutes: 6,
     xpReward: 15,
-    artwork: placeholder("es-cafe"),
+    artwork: { kind: "asset", name: "lessonCafe" },
     vocabulary: [
       {
         id: "es-cafe-v1",
@@ -539,7 +540,7 @@ export const lessons: Lesson[] = [
     description: "Ask where things are and find your way around.",
     estimatedMinutes: 6,
     xpReward: 15,
-    artwork: placeholder("es-travel"),
+    artwork: { kind: "asset", name: "lessonTravel" },
     vocabulary: [
       {
         id: "es-travel-v1",
@@ -704,7 +705,7 @@ export const lessons: Lesson[] = [
     description: "Ask for prices, sizes, and pay in a shop.",
     estimatedMinutes: 6,
     xpReward: 15,
-    artwork: placeholder("es-shopping"),
+    artwork: { kind: "asset", name: "lessonShopping" },
     vocabulary: [
       {
         id: "es-shopping-v1",
@@ -865,7 +866,7 @@ export const lessons: Lesson[] = [
     description: "Talk about the people in your life.",
     estimatedMinutes: 6,
     xpReward: 15,
-    artwork: placeholder("es-family"),
+    artwork: { kind: "asset", name: "lessonFamily" },
     vocabulary: [
       {
         id: "es-family-v1",
