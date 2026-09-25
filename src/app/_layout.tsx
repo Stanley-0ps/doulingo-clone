@@ -24,6 +24,10 @@ const disabledPostHog = {
   captureException: () => undefined,
   identify: () => undefined,
   screen: () => undefined,
+  // PostHogProvider calls `posthog.debug(debug)` on every render, so this
+  // stub must expose it too — otherwise rendering throws
+  // "undefined is not a function".
+  debug: () => undefined,
   logger: { info: () => undefined },
 } as unknown as PostHog;
 

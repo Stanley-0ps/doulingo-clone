@@ -14,6 +14,7 @@
  */
 
 import { getLessonsForUnit } from "@/data/lessons";
+import { COMPLETED_LESSON_COUNT } from "@/data/progress";
 import { getUnitsForLanguage } from "@/data/units";
 import type { LanguageId, Lesson, Unit } from "@/types/learning";
 
@@ -52,21 +53,19 @@ export interface TodayPlan {
 }
 
 /**
- * Stand-in for real progress, written to look like the home design: two
- * lessons of the current unit finished, the lesson step of today already
- * ticked, 15 of 20 XP banked, and a 12-day streak.
+ * Stand-in for real progress, written to look like the home design: the lesson
+ * step of today already ticked, 15 of 20 XP banked, and a 12-day streak. How
+ * many lessons are finished is not here — that belongs to `data/progress.ts`,
+ * which the lesson screen reads too.
  */
 const TODAY: {
   earnedXp: number;
   streakDays: number;
-  /** Lessons of the first unit the learner has already finished. */
-  completedLessons: number;
   /** Plan steps ticked off so far today. */
   completedStepIds: readonly PlanStepId[];
 } = {
   earnedXp: 15,
   streakDays: 12,
-  completedLessons: 2,
   completedStepIds: ["lesson"],
 };
 
@@ -93,7 +92,7 @@ export function getTodayPlan(languageId: LanguageId): TodayPlan | null {
   // Clamped: progress stored against an older course could point past the end
   // of the current one, and landing on a real lesson beats landing on nothing.
   const lesson =
-    lessons[Math.min(TODAY.completedLessons, lessons.length - 1)] ?? lessons[0];
+    lessons[Math.min(COMPLETED_LESSON_COUNT, lessons.length - 1)] ?? lessons[0];
 
   const isDone = (id: PlanStepId) => TODAY.completedStepIds.includes(id);
 
