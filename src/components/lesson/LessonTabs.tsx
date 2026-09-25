@@ -48,6 +48,7 @@ type LessonTabsProps = {
 export default function LessonTabs({ value, onChange }: LessonTabsProps) {
   return (
     <View
+      accessibilityRole="tablist"
       className="flex-row"
       style={{
         height: HEIGHT,

@@ -76,7 +76,7 @@ A scanner is an LLM that watches individual session recordings on a schedule and
 | Domingo activation breakage | Verified from an earlier setup | Visible breakage during onboarding, authentication, language choice, and entry into learning — this is the app’s identifiable activation journey. | Recordings whose `$current_url` matches onboarding, sign-up, sign-in, or language selection. | 50% | 0 observations / 0 credits currently estimated. |
 | Domingo learner frustration | Verified from an earlier setup | Clear visible struggle, including repeated attempts, unresponsive controls, and flow abandonment. | Sessions containing a `$rageclick`; intentionally not URL-scoped to limit overlap with the breakage monitor. | 100% | 0 observations / 0 credits currently estimated. |
 
-No session recordings were returned by the probe. Both scanners are armed and will start working when recordings arrive.
+No session recordings were returned by the probe. Both scanners are configured to run when recordings arrive; the activation scanner's effectiveness depends on verifying that React Native recordings expose `$current_url`.
 
 ## Follow-ups
 
