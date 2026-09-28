@@ -58,12 +58,15 @@ export default function LessonCard({
   onPress,
 }: LessonCardProps) {
   const isActive = status === "in-progress";
+  const completedActivityCount =
+    status === "completed" ? lesson.activities.length : COMPLETED_ACTIVITY_COUNT;
+  const statusLabel = isActive ? "in progress" : status;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Lesson ${lesson.order}: ${lesson.title}`}
+      accessibilityLabel={`Lesson ${lesson.order}: ${lesson.title}, ${statusLabel}, ${completedActivityCount} of ${lesson.activities.length} activities completed`}
       className="flex-row items-center active:opacity-90"
       style={{
         minHeight: MIN_HEIGHT,

@@ -88,7 +88,9 @@ export default function CaptionBubble({
           name="volume-high"
           size={SPEAKER_SIZE}
           color={colors["primary-deep"]}
-          accessibilityLabel="Replay the line"
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
           style={{ marginLeft: SPEAKER_GAP }}
         />
       </View>
