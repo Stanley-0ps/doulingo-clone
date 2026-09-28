@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import type { ComponentProps, ReactNode } from "react";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { colors } from "@/theme";
@@ -15,14 +15,6 @@ import { colors } from "@/theme";
  * ------------------------------------------------------------------------ */
 const INSET = 10; // the stage runs wider than everything else on the page
 const RADIUS = 24; // 40px
-/** The self-view is pinned the same distance in from the top and right. */
-const SELFIE_INSET = 16;
-const SELFIE_WIDTH = 95;
-const SELFIE_HEIGHT = 143;
-const SELFIE_RADIUS = 10;
-const SELFIE_BORDER = 2;
-/** The learner's own video sits above the bottom stack, never behind it. */
-const SELFIE_ICON = 30;
 /** Controls → the stage's bottom edge. */
 const BOTTOM_INSET = 23;
 /** The teacher's line → the controls. */
@@ -34,34 +26,37 @@ const STACK_GAP = 32;
  */
 const MIN_HEIGHT = 320;
 
+/**
+ * The mascot's ink — ears to paws — sits 3.9% below the centre of its square
+ * canvas, so a contained fit reads low in the stage. `app/onboarding.tsx` corrects
+ * the same asset the same way.
+ */
+const MASCOT_INK_OFFSET = 0.039;
+
 type TeacherStageProps = {
   /** The teacher's "video feed" — a still stands in until Stream is wired up. */
   backdrop: ComponentProps<typeof Image>["source"];
-  /** Camera off hides the self-view tile entirely. */
-  cameraOn: boolean;
-  /** The learner's avatar. Falls back to a neutral placeholder. */
-  selfieUri?: string;
   /** The teacher's line and the lesson controls, stacked at the bottom. */
   children: ReactNode;
 };
 
 /**
  * The stage the lesson plays on: a wide, rounded panel holding the teacher's
- * feed, the learner's self-view, and — anchored to the bottom — everything the
- * learner interacts with.
+ * feed and — anchored to the bottom — everything the learner interacts with.
  *
  * Nothing here talks to Stream yet, so the feed is the app's mascot rather than
- * a live track.
+ * a live track. There is no self-view: the lesson is audio only.
  */
-export default function TeacherStage({
-  backdrop,
-  cameraOn,
-  selfieUri,
-  children,
-}: TeacherStageProps) {
+export default function TeacherStage({ backdrop, children }: TeacherStageProps) {
+  // The nudge is a share of the fitted image, and `contain` fits the square
+  // asset to the stage's shorter side — so the stage has to be measured.
+  const [stage, setStage] = useState({ width: 0, height: 0 });
+  const fittedSide = Math.min(stage.width, stage.height);
+
   return (
     <View
       className="flex-1"
+      onLayout={(event) => setStage(event.nativeEvent.layout)}
       style={{
         marginHorizontal: INSET,
         minHeight: MIN_HEIGHT,
@@ -74,39 +69,11 @@ export default function TeacherStage({
         source={backdrop}
         contentFit="contain"
         accessibilityLabel="Your AI teacher"
-        style={StyleSheet.absoluteFill}
+        style={[
+          StyleSheet.absoluteFill,
+          { transform: [{ translateY: -fittedSide * MASCOT_INK_OFFSET }] },
+        ]}
       />
-
-      {cameraOn ? (
-        <View
-          style={{
-            position: "absolute",
-            top: SELFIE_INSET,
-            right: SELFIE_INSET,
-            width: SELFIE_WIDTH,
-            height: SELFIE_HEIGHT,
-            borderRadius: SELFIE_RADIUS,
-            borderWidth: SELFIE_BORDER,
-            borderColor: colors.background,
-            backgroundColor: colors.surface,
-            overflow: "hidden",
-          }}
-        >
-          {selfieUri ? (
-            <Image
-              source={{ uri: selfieUri }}
-              contentFit="cover"
-              accessibilityLabel="Your camera"
-              style={StyleSheet.absoluteFill}
-            />
-          ) : (
-            /* Signed in without a profile picture — a neutral head stands in. */
-            <View className="flex-1 items-center justify-center">
-              <Ionicons name="person" size={SELFIE_ICON} color="#C7CBDA" />
-            </View>
-          )}
-        </View>
-      ) : null}
 
       <View
         className="flex-1 justify-end"
