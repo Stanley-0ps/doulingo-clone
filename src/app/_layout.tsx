@@ -17,6 +17,7 @@ import { useEffect, useRef } from "react";
 import "../../global.css";
 
 import { posthogConfig } from "@/config/posthog";
+import StreamVideoProvider from "@/components/StreamVideoProvider";
 import { appFonts } from "@/constants/fonts";
 
 const disabledPostHog = {
@@ -97,7 +98,12 @@ function AppNavigator({ withPostHog }: { withPostHog: boolean }) {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       {withPostHog ? <PostHogIdentity /> : null}
-      <Stack screenOptions={{ headerShown: false }} />
+      {/* Stream sits inside Clerk so it can read the signed-in session, and
+          above the navigator so one client serves every screen for the whole
+          session. Audio lessons join calls through that client. */}
+      <StreamVideoProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </StreamVideoProvider>
     </ClerkProvider>
   );
 }

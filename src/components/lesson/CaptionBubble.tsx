@@ -32,9 +32,9 @@ type CaptionBubbleProps = {
 /**
  * The teacher's line, captioned under her as she says it.
  *
- * This is the session's live transcript: a real agent session will feed the
- * same two lines from the audio stream, so nothing about the bubble changes
- * when Stream is wired up — only where the text comes from.
+ * This is the session's live transcript: the AI teacher's replies will feed the
+ * same two lines, so nothing about the bubble changes when the Vision Agent is
+ * wired up — only where the text comes from.
  */
 export default function CaptionBubble({
   line,

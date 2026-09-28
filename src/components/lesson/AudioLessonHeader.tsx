@@ -44,8 +44,13 @@ const TICK_GREEN = "#64C039";
 type AudioLessonHeaderProps = {
   /** Screen title — the design labels the session, not the lesson. */
   title: string;
-  /** Session state, e.g. "Online". Rendered behind the green dot. */
+  /** Session state, e.g. "Online". Rendered behind the dot. */
   status: string;
+  /**
+   * The status dot. Defaults to the design's green, which is what "Online"
+   * means — the other session states pass their own tone.
+   */
+  statusColor?: string;
   /** XP the lesson is worth, shown in the middle disc. */
   xpReward: number;
   /** Whether the learner's camera is on — swaps the disc's glyph. */
@@ -67,6 +72,7 @@ type AudioLessonHeaderProps = {
 export default function AudioLessonHeader({
   title,
   status,
+  statusColor = TICK_GREEN,
   xpReward,
   cameraOn,
   alertsOn,
@@ -109,7 +115,7 @@ export default function AudioLessonHeader({
               width: DOT_SIZE,
               height: DOT_SIZE,
               borderRadius: DOT_SIZE / 2,
-              backgroundColor: TICK_GREEN,
+              backgroundColor: statusColor,
             }}
           />
           <Text

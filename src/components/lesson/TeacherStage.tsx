@@ -34,7 +34,7 @@ const MIN_HEIGHT = 320;
 const MASCOT_INK_OFFSET = 0.039;
 
 type TeacherStageProps = {
-  /** The teacher's "video feed" — a still stands in until Stream is wired up. */
+  /** The teacher's "video feed" — a still stands in until the AI teacher joins. */
   backdrop: ComponentProps<typeof Image>["source"];
   /** The teacher's line and the lesson controls, stacked at the bottom. */
   children: ReactNode;
@@ -44,8 +44,9 @@ type TeacherStageProps = {
  * The stage the lesson plays on: a wide, rounded panel holding the teacher's
  * feed and — anchored to the bottom — everything the learner interacts with.
  *
- * Nothing here talks to Stream yet, so the feed is the app's mascot rather than
- * a live track. There is no self-view: the lesson is audio only.
+ * The learner's own audio runs over the Stream call, but the teacher's video
+ * track needs the Vision Agent, which is not built yet — so the feed is the
+ * app's mascot for now. There is no self-view: the lesson is audio only.
  */
 export default function TeacherStage({ backdrop, children }: TeacherStageProps) {
   // The nudge is a share of the fitted image, and `contain` fits the square
