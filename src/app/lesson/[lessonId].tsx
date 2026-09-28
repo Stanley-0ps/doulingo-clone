@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/expo";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -41,7 +40,6 @@ const BOTTOM_GAP = 20;
 export default function AudioLessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const router = useRouter();
-  const { user } = useUser();
 
   // Session state. None of it reaches the network yet — a live agent session
   // will subscribe to these same switches when Stream is wired up.
@@ -116,11 +114,7 @@ export default function AudioLessonScreen() {
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
         >
-          <TeacherStage
-            backdrop={images.mascotWelcome}
-            cameraOn={cameraOn}
-            selfieUri={user?.imageUrl}
-          >
+          <TeacherStage backdrop={images.mascotWelcome}>
             {subtitlesOn ? (
               <LessonSubtitles
                 eyebrow={`${language.name} · Lesson ${lesson.order}`}
